@@ -16,14 +16,22 @@ namespace DatabaseProject
 {
     public partial class Form1 : Form
     {
-        SqlConnection connection = new SqlConnection("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\Users\\londo\\Documents\\GitHub\\CIS425\\CIS425\\DatabaseProject\\DatabaseProject\\Database1.mdf;Integrated Security=True");
-        SqlCommand cmd = new SqlCommand();
+        SqlConnection connection; 
+        SqlCommand cmd;
         SqlDataReader reader;
-        DataTable dataTable = new DataTable();
+        DataTable dataTable;
 
         public Form1()
         {
             InitializeComponent();
+            //How to assemble a relative file path: https://stackoverflow.com/questions/1833640/connection-string-with-relative-path-to-the-database-file
+            string executable = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string path = (System.IO.Path.GetDirectoryName(executable));
+            AppDomain.CurrentDomain.SetData("DataDirectory", path);
+            //
+            connection = new SqlConnection("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\\Database1.mdf;Integrated Security=True");
+            cmd = new SqlCommand();
+            dataTable = new DataTable();
         }
 
         private void SubmitButton_Click(object sender, EventArgs e)

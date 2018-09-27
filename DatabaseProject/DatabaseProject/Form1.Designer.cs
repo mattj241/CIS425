@@ -30,17 +30,17 @@
         {
             this.DataGridView = new System.Windows.Forms.DataGridView();
             this.label1 = new System.Windows.Forms.Label();
-            this.QueryBox = new System.Windows.Forms.TextBox();
             this.SubmitButton = new System.Windows.Forms.Button();
+            this.QueryBox = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.DataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // DataGridView
             // 
             this.DataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.DataGridView.Location = new System.Drawing.Point(12, 123);
+            this.DataGridView.Location = new System.Drawing.Point(17, 228);
             this.DataGridView.Name = "DataGridView";
-            this.DataGridView.Size = new System.Drawing.Size(776, 315);
+            this.DataGridView.Size = new System.Drawing.Size(745, 199);
             this.DataGridView.TabIndex = 0;
             // 
             // label1
@@ -53,17 +53,9 @@
             this.label1.TabIndex = 1;
             this.label1.Text = "Input SQL Query:";
             // 
-            // QueryBox
-            // 
-            this.QueryBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.QueryBox.Location = new System.Drawing.Point(17, 66);
-            this.QueryBox.Name = "QueryBox";
-            this.QueryBox.Size = new System.Drawing.Size(265, 22);
-            this.QueryBox.TabIndex = 2;
-            // 
             // SubmitButton
             // 
-            this.SubmitButton.Location = new System.Drawing.Point(314, 66);
+            this.SubmitButton.Location = new System.Drawing.Point(658, 168);
             this.SubmitButton.Name = "SubmitButton";
             this.SubmitButton.Size = new System.Drawing.Size(75, 22);
             this.SubmitButton.TabIndex = 3;
@@ -71,13 +63,21 @@
             this.SubmitButton.UseVisualStyleBackColor = true;
             this.SubmitButton.Click += new System.EventHandler(this.SubmitButton_Click);
             // 
+            // QueryBox
+            // 
+            this.QueryBox.Location = new System.Drawing.Point(17, 94);
+            this.QueryBox.Name = "QueryBox";
+            this.QueryBox.Size = new System.Drawing.Size(617, 96);
+            this.QueryBox.TabIndex = 4;
+            this.QueryBox.Text = "";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.SubmitButton);
             this.Controls.Add(this.QueryBox);
+            this.Controls.Add(this.SubmitButton);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.DataGridView);
             this.Name = "Form1";
@@ -92,8 +92,8 @@
 
         private System.Windows.Forms.DataGridView DataGridView;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox QueryBox;
         private System.Windows.Forms.Button SubmitButton;
+        private System.Windows.Forms.RichTextBox QueryBox;
     }
 }
 
