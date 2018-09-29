@@ -32,6 +32,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.SubmitButton = new System.Windows.Forms.Button();
             this.QueryBox = new System.Windows.Forms.RichTextBox();
+            this.ResponseLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.DataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -47,7 +48,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(13, 13);
+            this.label1.Location = new System.Drawing.Point(13, 52);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(148, 20);
             this.label1.TabIndex = 1;
@@ -71,11 +72,22 @@
             this.QueryBox.TabIndex = 4;
             this.QueryBox.Text = "";
             // 
+            // ResponseLabel
+            // 
+            this.ResponseLabel.AutoSize = true;
+            this.ResponseLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ResponseLabel.ForeColor = System.Drawing.Color.Red;
+            this.ResponseLabel.Location = new System.Drawing.Point(17, 197);
+            this.ResponseLabel.Name = "ResponseLabel";
+            this.ResponseLabel.Size = new System.Drawing.Size(0, 16);
+            this.ResponseLabel.TabIndex = 5;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.ResponseLabel);
             this.Controls.Add(this.QueryBox);
             this.Controls.Add(this.SubmitButton);
             this.Controls.Add(this.label1);
@@ -94,6 +106,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button SubmitButton;
         private System.Windows.Forms.RichTextBox QueryBox;
+        private System.Windows.Forms.Label ResponseLabel;
     }
 }
 

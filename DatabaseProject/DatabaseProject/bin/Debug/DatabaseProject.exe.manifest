@@ -42,14 +42,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DatabaseProject.exe" size="10712">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DatabaseProject.exe" size="12248">
       <assemblyIdentity name="DatabaseProject" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>oDI39mU4uNSUVj8InTOC1TvLYKeWTRtQe0o5t/9eYhA=</dsig:DigestValue>
+        <dsig:DigestValue>7CEb9K3mJK6QsAXHLAQRXP2j6NoRggNlSu/preDyGeA=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -83,7 +83,7 @@
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>HFZsOEpRzi5qxiOGdFcv5q5h9cJed1ZfJ/siiiXaGY0=</dsig:DigestValue>
+      <dsig:DigestValue>H8bMLS99iN+ypMDJlAwpkNzDR1xajhrY6VgrZT6gXK8=</dsig:DigestValue>
     </hash>
   </file>
   <file name="Database1_log.ldf" size="8388608" writeableType="applicationData">
@@ -92,7 +92,7 @@
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>Pe2wE3dDZx9COQ1v5P/30DvfbFjMaryl80TzWoGNDIA=</dsig:DigestValue>
+      <dsig:DigestValue>HXk6XmGvsm9APden1u4sXr9lJM0cXKVBhzynL4q++l8=</dsig:DigestValue>
     </hash>
   </file>
   <file name="DatabaseProject.exe.config" size="1292">
