@@ -36,7 +36,7 @@ namespace DatabaseProject
             string path = (System.IO.Path.GetDirectoryName(executable));
             AppDomain.CurrentDomain.SetData("DataDirectory", path);
             //
-            connection = new SqlConnection("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\\Database1.mdf;Integrated Security=True");
+            connection = new SqlConnection("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\Users\\londo\\Documents\\GitHub\\CIS425\\DatabaseProject\\DatabaseProject\\bin\\Debug\\Database1.mdf;Integrated Security=True");
             cmd = new SqlCommand();
             dataTable = new DataTable();
         }
