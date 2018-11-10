@@ -17,6 +17,9 @@ namespace WindowsFormsApp2
         SqlCommand cmd;
         SqlDataReader reader;
         DataTable dataTable;
+        DataTable G_cars;
+        DataTable G_Customers;
+        DataTable G_Rentals;
 
         public carRental()
         {
@@ -24,6 +27,32 @@ namespace WindowsFormsApp2
             string executable = System.Reflection.Assembly.GetExecutingAssembly().Location;
             string path = (System.IO.Path.GetDirectoryName(executable));
             AppDomain.CurrentDomain.SetData("DataDirectory", path);
+            CreateGschema();
+        }
+
+        public void CreateGschema()
+        {
+            G_cars = new DataTable();
+            G_cars.Columns.Add("G-Vin", typeof(string));
+            G_cars.Columns.Add("G-Make", typeof(string));
+            G_cars.Columns.Add("G-Year", typeof(Int32));
+            G_cars.Columns.Add("G-Type", typeof(string));
+            G_cars.Columns.Add("G-Color", typeof(string));
+            G_cars.Columns.Add("G-NumberOfPassengers", typeof(Int16));
+            G_cars.Columns.Add("G-Price", typeof(double));
+
+            G_Customers = new DataTable();
+            G_Customers.Columns.Add("G-License", typeof(string));
+            G_Customers.Columns.Add("G-FullName", typeof(string));
+            G_Customers.Columns.Add("G-FullAddress", typeof(string));
+            G_Customers.Columns.Add("G-Age", typeof(Int32));
+
+            G_Rentals = new DataTable();
+            G_Rentals.Columns.Add("G-Vin", typeof(string));
+            G_Rentals.Columns.Add("G-Lincense", typeof(string));
+            G_Rentals.Columns.Add("G-StartDate", typeof(string));
+            G_Rentals.Columns.Add("G-NumberOfDays", typeof(Int16));
+            G_Rentals.Columns.Add("G-Discount", typeof(double));
         }
 
 
@@ -107,7 +136,6 @@ namespace WindowsFormsApp2
                         dr.SetField<string>(3, "1/1/1970");
                     }
                     masterView.ImportRow(dr);
-
                 }
                 foreach (DataRow dr in London.Rows)
                 {
@@ -117,6 +145,28 @@ namespace WindowsFormsApp2
                     dr.SetField<string>(3, DOB);
                     masterView.ImportRow(dr);
                 }
+
+                foreach (DataRow dr in masterView.Rows)
+                {
+                    Int32 currentYear = 2018;
+                    var LincenseNumber = dr.ItemArray[0];
+                    var Address = dr.ItemArray[1];
+                    var FullName = dr.ItemArray[2];
+                    var DOB = dr.ItemArray[3];
+                    Regex rx = new Regex("[0-9]{4}$");
+                    MatchCollection year = rx.Matches(DOB.ToString());
+
+                    DataRow newRow = G_Customers.NewRow();
+                    newRow.SetField<string>("G-License", LincenseNumber.ToString());
+                    newRow.SetField<string>("G-Fullname", Address.ToString());
+                    newRow.SetField<string>("G-Fulladdress", FullName.ToString());
+                    newRow.SetField<Int32>("G-Age", currentYear - (Int32.Parse(year[0].ToString())));
+                    G_Customers.Rows.Add(newRow);
+                }
+                G_Customers.AcceptChanges();
+                return G_Customers;
+
+
             }
 
             else if (Mehdi.Columns.Contains("year"))
@@ -138,14 +188,7 @@ namespace WindowsFormsApp2
                 Mehdi.Columns["rental price"].ColumnName = "Daily_Rate";
 
                 masterView = Mehdi.Clone();
-                //foreach (DataColumn dc in Mehdi.Columns)
-                //{
-                //    richTextBox1.Text += $"{dc.DataType}\n";
-                //}
-                //foreach (DataColumn dc in London.Columns)
-                //{
-                //    richTextBox1.Text += $"{dc.DataType}\n";
-                //}
+
                 foreach (DataRow dr in Mehdi.Rows)
                 {
                     masterView.ImportRow(dr);
@@ -155,6 +198,23 @@ namespace WindowsFormsApp2
                 {
                     masterView.ImportRow(dr);
                 }
+
+                foreach (DataRow dr in masterView.Rows)
+                {
+                    var vin = dr.ItemArray[0];
+                    var model_year = dr.ItemArray[1];
+                    var type = dr.ItemArray[2];
+                    var rate = dr.ItemArray[3];
+
+                    DataRow newRow = G_cars.NewRow();
+                    newRow.SetField<string>("G-Vin", vin.ToString());
+                    newRow.SetField<Int32>("G-Year", Int32.Parse(model_year.ToString()));
+                    newRow.SetField<string>("G-Type", type.ToString());
+                    newRow.SetField<double>("G-Price", double.Parse(rate.ToString()));
+                    G_cars.Rows.Add(newRow);
+                }
+                G_cars.AcceptChanges();
+                //return G_cars;
             }
 
             else if (Mehdi.Columns.Contains("Start Date"))
@@ -255,6 +315,12 @@ namespace WindowsFormsApp2
             {
                 SubmitBtn_Click(sender, e);
             }
+        }
+
+        private void Load_Gtable_Click(object sender, EventArgs e)
+        {
+            MergedView.DataSource = G_Customers;
+            MergedView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
     }
 }

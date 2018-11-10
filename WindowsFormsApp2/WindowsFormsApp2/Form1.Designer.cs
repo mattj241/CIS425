@@ -34,6 +34,7 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.MergedView = new System.Windows.Forms.DataGridView();
+            this.Load_Gtable = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.sql_Output)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MergedView)).BeginInit();
@@ -84,23 +85,34 @@
             // 
             this.richTextBox1.Location = new System.Drawing.Point(29, 318);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(386, 200);
+            this.richTextBox1.Size = new System.Drawing.Size(103, 200);
             this.richTextBox1.TabIndex = 5;
             this.richTextBox1.Text = "";
             // 
             // MergedView
             // 
             this.MergedView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.MergedView.Location = new System.Drawing.Point(526, 318);
+            this.MergedView.Location = new System.Drawing.Point(262, 318);
             this.MergedView.Name = "MergedView";
-            this.MergedView.Size = new System.Drawing.Size(499, 200);
+            this.MergedView.Size = new System.Drawing.Size(763, 200);
             this.MergedView.TabIndex = 6;
+            // 
+            // Load_Gtable
+            // 
+            this.Load_Gtable.Location = new System.Drawing.Point(542, 13);
+            this.Load_Gtable.Name = "Load_Gtable";
+            this.Load_Gtable.Size = new System.Drawing.Size(75, 23);
+            this.Load_Gtable.TabIndex = 7;
+            this.Load_Gtable.Text = "Load";
+            this.Load_Gtable.UseVisualStyleBackColor = true;
+            this.Load_Gtable.Click += new System.EventHandler(this.Load_Gtable_Click);
             // 
             // carRental
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1066, 530);
+            this.Controls.Add(this.Load_Gtable);
             this.Controls.Add(this.MergedView);
             this.Controls.Add(this.richTextBox1);
             this.Controls.Add(this.dataGridView1);
@@ -125,6 +137,7 @@
           private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.DataGridView MergedView;
+        private System.Windows.Forms.Button Load_Gtable;
     }
 }
 
