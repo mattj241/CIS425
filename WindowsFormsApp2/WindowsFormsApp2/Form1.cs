@@ -58,7 +58,8 @@ namespace WindowsFormsApp2
 
         DataTable SqlQueryfetch_Mehdi(string sql)
         {
-            string newsql = Merge(sql);
+            sql = TrimGdash(sql);
+            string newsql = Merge_mehdi(sql);
 
             DataSet ds = new DataSet();
             var da = new SQLiteDataAdapter(newsql, conn_Mehdi);
@@ -70,6 +71,7 @@ namespace WindowsFormsApp2
 
         DataTable SqlQueryfetch_London(string sql)
         {
+            sql = TrimGdash(sql);
             cmd = new SqlCommand();
             dataTable = new DataTable();
 
@@ -85,7 +87,7 @@ namespace WindowsFormsApp2
             return dataTable;
         }
 
-        string Merge(string sql)
+        string Merge_mehdi(string sql)
         {
             sql = sql.ToLower();
             string newsql = "";
@@ -105,6 +107,13 @@ namespace WindowsFormsApp2
                 newsql = sql.Replace("rentals", "RENTAL_INFO");
             }
 
+            return newsql;
+        }
+
+        string TrimGdash(string sql)
+        {
+            sql = sql.ToLower();
+            string newsql = sql.Replace("g", "").Replace("-", "");
             return newsql;
         }
 
