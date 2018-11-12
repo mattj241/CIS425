@@ -58,7 +58,7 @@ namespace WindowsFormsApp2
 
         DataTable SqlQueryfetch_Mehdi(string sql)
         {
-            sql = TrimGdash(sql);
+            //sql = TrimGdash(sql);
             string newsql = Merge_mehdi(sql);
 
             DataSet ds = new DataSet();
@@ -119,6 +119,7 @@ namespace WindowsFormsApp2
 
         DataTable MergeDB(DataTable Mehdi, DataTable London)
         {
+            var name = Mehdi.TableName;
             DataTable masterView = new DataTable();
             if (Mehdi.Columns.Contains("Address"))
             {
@@ -293,7 +294,15 @@ namespace WindowsFormsApp2
         DataTable ConvertDateToString(DataTable dt)
         {
             DataTable data_London_new = dt.Clone();
-            data_London_new.Columns[3].DataType = typeof(string);
+            int i = 0;
+            foreach (DataColumn col in data_London_new.Columns)
+            {
+                if ((col.DataType == typeof(System.DateTime)))
+                {
+                    data_London_new.Columns[i].DataType = typeof(string);
+                }
+                i++;
+            }
             foreach (DataRow row in dt.Rows)
             {
                 data_London_new.ImportRow(row);
@@ -302,21 +311,174 @@ namespace WindowsFormsApp2
             return data_London_new;
         }
 
+        string ConvertToLondonAttributes(string attrib)
+        {
+            if(attrib.Contains("year"))
+            {
+                attrib = attrib.Replace("year", "model_year");
+            }
+            if(attrib.Contains("price"))
+            {
+                attrib = attrib.Replace("price", "daily_rate");
+            }
+            if (attrib.Contains("license"))
+            {
+                attrib = attrib.Replace("license", "driverslicensenumber");
+            }
+            if (attrib.Contains("fullname"))
+            {
+                attrib = attrib.Replace("fullname", "full_name");
+            }
+            if (attrib.Contains("fulladdress"))
+            {
+                attrib = attrib.Replace("fulladdress", "address");
+            }
+            if (attrib.Contains("age"))
+            {
+                attrib = attrib.Replace("age", "dateofbirth");
+            }
+            if (attrib.Contains("startdate"))
+            {
+                attrib = attrib.Replace("startdate", "startrentaldate");
+            }
+            if (attrib.Contains("numberofdays"))
+            {
+                attrib = attrib.Replace("numberofdays", "endrentaldate");
+            }
+            //Empty Categories
+            if (attrib.Contains("make"))
+            {
+                attrib = attrib.Replace("make", "");
+            }
+            if (attrib.Contains("color"))
+            {
+                attrib = attrib.Replace("color", "");
+            }
+            if (attrib.Contains("numberofpassengers"))
+            {
+                attrib = attrib.Replace("numberofpassengers", "");
+            }
+            if (attrib.Contains("discount"))
+            {
+                attrib = attrib.Replace("discount", "");
+            }
+            attrib = TrimGdash(attrib);
+            return attrib;
+        }
+
+        string ConvertToMehdiAttributes(string attrib)
+        {
+            if (attrib.Contains("vin"))
+            {
+                attrib = attrib.Replace("vin", "car id");
+            }
+            if (attrib.Contains("price"))
+            {
+                attrib = attrib.Replace("price", "rental price");
+            }
+            if (attrib.Contains("license"))
+            {
+                attrib = attrib.Replace("license", "drivers license");
+            }
+            if (attrib.Contains("fullname"))
+            {
+                attrib = attrib.Replace("fullname", "name");
+            }
+            if (attrib.Contains("fulladdress"))
+            {
+                attrib = attrib.Replace("fulladdress", "address");
+            }
+            //TODO: Add a DOB column to Has' table
+            if (attrib.Contains("age"))
+            {
+                attrib = attrib.Replace("age", "dateofbirth");
+            }
+            if (attrib.Contains("startdate"))
+            {
+                attrib = attrib.Replace("startdate", "start date");
+            }
+            if (attrib.Contains("numberofdays"))
+            {
+                attrib = attrib.Replace("numberofdays", "end date");
+            }
+            //Empty categories
+            if (attrib.Contains("make"))
+            {
+                attrib = attrib.Replace("make", "");
+            }
+            if (attrib.Contains("color"))
+            {
+                attrib = attrib.Replace("color", "");
+            }
+            if (attrib.Contains("numberofpassengers"))
+            {
+                attrib = attrib.Replace("numberofpassengers", "");
+            }
+            if (attrib.Contains("discount"))
+            {
+                attrib = attrib.Replace("discount", "");
+            }
+            attrib = TrimGdash(attrib);
+            return attrib;
+        }
+
+        string BuildQuery(string sqlInput, char indicator)
+        {
+            Match result;
+            string attributes = "", tables = "", constraints = "";
+            if (sqlInput.Contains("where"))
+            {
+                Regex whereExpression = new Regex(@"^(\s*select.*(?=from))(\s*from.*(?=where))(where.*)");
+                result = whereExpression.Match(sqlInput);
+                attributes = result.Groups[1].ToString().Trim();
+                tables = result.Groups[2].ToString().Trim();
+                constraints = result.Groups[3].ToString().Trim();
+                constraints = TrimGdash(constraints);
+            }
+            else
+            {
+                Regex withoutWhereExpression = new Regex(@"^(\s*select.*(?=from))(\s*from.*)");
+                result = withoutWhereExpression.Match(sqlInput);
+                attributes = result.Groups[1].ToString().Trim();
+                tables = result.Groups[2].ToString().Trim();
+            }
+            if (indicator == 'L')
+            {
+                attributes = ConvertToLondonAttributes(attributes);
+                tables = TrimGdash(tables);
+            }
+            else
+            {
+                attributes = ConvertToMehdiAttributes(attributes);
+                tables = TrimGdash(tables);
+                //tables = Merge_mehdi(tables);
+            }
+            sqlInput = $"{attributes} {tables} {constraints}";
+            return sqlInput.Trim();
+        }
+
+        string BuildMehdiQuery(string sqlInput)
+        {
+            return sqlInput;
+        }
+
         private void SubmitBtn_Click(object sender, EventArgs e)
         {
-            string query = sql_input.Text;
+            string query = sql_input.Text.ToLower();
+            string Londonquery = BuildQuery(query, 'L');
+            string Mehdiquery = BuildQuery(query, 'M');
 
             DataTable newTable;
             if (!String.IsNullOrEmpty(query))
             {
-                DataTable data_London = SqlQueryfetch_London(query);
-                DataTable data_Mehdi = SqlQueryfetch_Mehdi(query);
+                DataTable data_London = SqlQueryfetch_London(Londonquery);
+                DataTable data_Mehdi = SqlQueryfetch_Mehdi(Mehdiquery);
                 data_London = ConvertDateToString(data_London);
                 newTable = MergeDB(data_Mehdi, data_London);
 
 
-                sql_Output.DataSource = data_London;
-                dataGridView1.DataSource = data_Mehdi;
+                //sql_Output.DataSource = data_London;
+                //dataGridView1.DataSource = data_Mehdi;
                 MergedView.DataSource = newTable;
 
             }

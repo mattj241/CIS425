@@ -49,7 +49,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>tukyvZxpF+y5RAolIWVdRnhaf5h9rNo4yMzmv726+Ko=</dsig:DigestValue>
+        <dsig:DigestValue>79A+XnPIAf1mYt7zmhsNYd+KsV3aVdKznL/ORXzF5AM=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -83,7 +83,7 @@
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>Qxbkr6y4VbHWpsUrvJ1VQCzxlyReV55Ec/Q+lqL5Uqc=</dsig:DigestValue>
+      <dsig:DigestValue>PBFuT+uzL2LR6WK6x+GIZ+JQvrwfTWgEvdiHJsTewtg=</dsig:DigestValue>
     </hash>
   </file>
   <file name="Database1_log.ldf" size="8388608" writeableType="applicationData">
@@ -92,7 +92,7 @@
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-      <dsig:DigestValue>mXrQFio1HKrI5YK/gnagVJIECOwyEu4tCOrXgkp9QSg=</dsig:DigestValue>
+      <dsig:DigestValue>k9Oa0Clr3AHyYMSypT2xEHl6Bp6EIsAe+BRL9rti6ow=</dsig:DigestValue>
     </hash>
   </file>
   <file name="DatabaseProject.exe.config" size="1292">
