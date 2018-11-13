@@ -55,14 +55,36 @@ namespace WindowsFormsApp2
             G_Rentals.Columns.Add("G-Discount", typeof(double));
         }
 
+        string ConvertToGschemaColumnName(string columnName)
+        {
+            columnName = columnName.ToLower();
+            switch (columnName)
+            {
+                case "car id":
+                case "vin":
+                    return "G-Vin";
+                case "rental price":
+                case "daily_rate":
+                    return "G-Price";
+                case "type":
+                    return "G-Type";
+                case "model_year":
+                case "year":
+                    return "G-Year";
+                default:
+                    return "0";
+            }
+        }
+
 
         DataTable SqlQueryfetch_Mehdi(string sql)
         {
-            //sql = TrimGdash(sql);
-            string newsql = Merge_mehdi(sql);
+            sql = TrimGdash(sql);
+            //string newsql = Merge_mehdi(sql);
+            //sql = "select 'car id', type from CAR_INFO";
 
             DataSet ds = new DataSet();
-            var da = new SQLiteDataAdapter(newsql, conn_Mehdi);
+            var da = new SQLiteDataAdapter(sql, conn_Mehdi);
             da.Fill(ds);
             sql_input.Text = String.Empty;
 
@@ -72,6 +94,7 @@ namespace WindowsFormsApp2
         DataTable SqlQueryfetch_London(string sql)
         {
             sql = TrimGdash(sql);
+            //sql = "select vin, type, daily_rate from cars";
             cmd = new SqlCommand();
             dataTable = new DataTable();
 
@@ -117,11 +140,12 @@ namespace WindowsFormsApp2
             return newsql;
         }
 
-        DataTable MergeDB(DataTable Mehdi, DataTable London)
+        DataTable MergeDB(DataTable Mehdi, DataTable London, string originalQuery)
         {
-            var name = Mehdi.TableName;
+            originalQuery = originalQuery.ToLower();
             DataTable masterView = new DataTable();
-            if (Mehdi.Columns.Contains("Address"))
+            DataTable masterView2 = new DataTable();
+            if (originalQuery.Contains("g-customers"))
             {
                 DataTable data_Mehdi_New = Mehdi.Clone();
                 data_Mehdi_New.Columns[0].DataType = typeof(Int64);
@@ -177,55 +201,64 @@ namespace WindowsFormsApp2
                 return G_Customers;
             }
 
-            else if (Mehdi.Columns.Contains("year"))
+            else if (originalQuery.Contains("g-cars"))
             {
                 DataTable data_Mehdi_New = Mehdi.Clone();
-                data_Mehdi_New.Columns[0].DataType = typeof(string);
-                data_Mehdi_New.Columns[1].DataType = typeof(Int16);
-                data_Mehdi_New.Columns[2].DataType = typeof(string);
-                data_Mehdi_New.Columns[3].DataType = typeof(string);
+                for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
+                {
+                    data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
+                }
                 foreach (DataRow row in Mehdi.Rows)
                 {
                     data_Mehdi_New.ImportRow(row);
                 }
+                for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
+                {
+                    data_Mehdi_New.Columns[i].ColumnName = ConvertToGschemaColumnName(data_Mehdi_New.Columns[i].ColumnName);
+                }
                 data_Mehdi_New.AcceptChanges();
                 Mehdi = data_Mehdi_New;
 
-                Mehdi.Columns["car id"].ColumnName = "Vin";
-                Mehdi.Columns["year"].ColumnName = "Model_year";
-                Mehdi.Columns["rental price"].ColumnName = "Daily_Rate";
-
                 masterView = Mehdi.Clone();
-
+                
                 foreach (DataRow dr in Mehdi.Rows)
                 {
                     masterView.ImportRow(dr);
                 }
 
-                foreach (DataRow dr in London.Rows)
+                for (int i = 0; i < London.Rows.Count; i++)
                 {
-                    masterView.ImportRow(dr);
+                    var newRow = masterView.NewRow();
+                    var sourceRow = London.Rows[i];
+                    newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
+                    masterView.Rows.Add(newRow);
                 }
 
-                foreach (DataRow dr in masterView.Rows)
+                for (int i = 0; i < masterView.Rows.Count; i++)
                 {
-                    var vin = dr.ItemArray[0];
-                    var model_year = dr.ItemArray[1];
-                    var type = dr.ItemArray[2];
-                    var rate = dr.ItemArray[3];
-
                     DataRow newRow = G_cars.NewRow();
-                    newRow.SetField<string>("G-Vin", vin.ToString());
-                    newRow.SetField<Int32>("G-Year", Int32.Parse(model_year.ToString()));
-                    newRow.SetField<string>("G-Type", type.ToString());
-                    newRow.SetField<double>("G-Price", double.Parse(rate.ToString()));
+                    for (int j = 0; j < masterView.Columns.Count; j++)
+                    {
+                        if (masterView.Columns[j].ColumnName == "G-Vin" || masterView.Columns[j].ColumnName == "G-Type")
+                        {
+                            newRow.SetField<string>(masterView.Columns[j].ColumnName, masterView.Rows[i].ItemArray[j].ToString());
+                        }
+                        else if (masterView.Columns[j].ColumnName == "G-Price")
+                        {
+                            newRow.SetField<double>(masterView.Columns[j].ColumnName, double.Parse(masterView.Rows[i].ItemArray[j].ToString()));
+                        }
+                        else if (masterView.Columns[j].ColumnName == "G-Year")
+                        {
+                            newRow.SetField<Int32>(masterView.Columns[j].ColumnName, Int32.Parse(masterView.Rows[i].ItemArray[j].ToString()));
+                        }
+                    }
                     G_cars.Rows.Add(newRow);
                 }
                 G_cars.AcceptChanges();
                 return G_cars;
             }
 
-            else if (Mehdi.Columns.Contains("Start Date"))
+            else if (originalQuery.Contains("g-rentals"))
             {
                 DataTable data_London_New = London.Clone();
                 data_London_New.Columns[1].DataType = typeof(string);
@@ -370,15 +403,15 @@ namespace WindowsFormsApp2
         {
             if (attrib.Contains("vin"))
             {
-                attrib = attrib.Replace("vin", "car id");
+                attrib = attrib.Replace("vin", "[car id]");
             }
             if (attrib.Contains("price"))
             {
-                attrib = attrib.Replace("price", "rental price");
+                attrib = attrib.Replace("price", "[rental price]");
             }
             if (attrib.Contains("license"))
             {
-                attrib = attrib.Replace("license", "drivers license");
+                attrib = attrib.Replace("license", "[drivers license]");
             }
             if (attrib.Contains("fullname"))
             {
@@ -395,11 +428,11 @@ namespace WindowsFormsApp2
             }
             if (attrib.Contains("startdate"))
             {
-                attrib = attrib.Replace("startdate", "start date");
+                attrib = attrib.Replace("startdate", "[start date]");
             }
             if (attrib.Contains("numberofdays"))
             {
-                attrib = attrib.Replace("numberofdays", "end date");
+                attrib = attrib.Replace("numberofdays", "[end date]");
             }
             //Empty categories
             if (attrib.Contains("make"))
@@ -451,15 +484,10 @@ namespace WindowsFormsApp2
             {
                 attributes = ConvertToMehdiAttributes(attributes);
                 tables = TrimGdash(tables);
-                //tables = Merge_mehdi(tables);
+                tables = Merge_mehdi(tables);
             }
             sqlInput = $"{attributes} {tables} {constraints}";
             return sqlInput.Trim();
-        }
-
-        string BuildMehdiQuery(string sqlInput)
-        {
-            return sqlInput;
         }
 
         private void SubmitBtn_Click(object sender, EventArgs e)
@@ -468,19 +496,16 @@ namespace WindowsFormsApp2
             string Londonquery = BuildQuery(query, 'L');
             string Mehdiquery = BuildQuery(query, 'M');
 
-            DataTable newTable;
+            DataTable newTable = new DataTable();
             if (!String.IsNullOrEmpty(query))
             {
                 DataTable data_London = SqlQueryfetch_London(Londonquery);
                 DataTable data_Mehdi = SqlQueryfetch_Mehdi(Mehdiquery);
                 data_London = ConvertDateToString(data_London);
-                newTable = MergeDB(data_Mehdi, data_London);
+                newTable = MergeDB(data_Mehdi, data_London, query);
 
-
-                //sql_Output.DataSource = data_London;
-                //dataGridView1.DataSource = data_Mehdi;
                 MergedView.DataSource = newTable;
-
+                MergedView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             }
             else
             {
@@ -495,12 +520,6 @@ namespace WindowsFormsApp2
             {
                 SubmitBtn_Click(sender, e);
             }
-        }
-
-        private void Load_Gtable_Click(object sender, EventArgs e)
-        {
-            MergedView.DataSource = G_Customers;
-            MergedView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
     }
 }

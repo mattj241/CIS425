@@ -31,12 +31,13 @@
             this.submitBtn = new System.Windows.Forms.Button();
             this.sql_input = new System.Windows.Forms.TextBox();
             this.MergedView = new System.Windows.Forms.DataGridView();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.MergedView)).BeginInit();
             this.SuspendLayout();
             // 
             // submitBtn
             // 
-            this.submitBtn.Location = new System.Drawing.Point(418, 7);
+            this.submitBtn.Location = new System.Drawing.Point(421, 29);
             this.submitBtn.Margin = new System.Windows.Forms.Padding(2);
             this.submitBtn.Name = "submitBtn";
             this.submitBtn.Size = new System.Drawing.Size(96, 42);
@@ -48,7 +49,7 @@
             // sql_input
             // 
             this.sql_input.AcceptsReturn = true;
-            this.sql_input.Location = new System.Drawing.Point(10, 7);
+            this.sql_input.Location = new System.Drawing.Point(12, 41);
             this.sql_input.Margin = new System.Windows.Forms.Padding(2);
             this.sql_input.Name = "sql_input";
             this.sql_input.Size = new System.Drawing.Size(405, 20);
@@ -60,14 +61,25 @@
             this.MergedView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.MergedView.Location = new System.Drawing.Point(12, 76);
             this.MergedView.Name = "MergedView";
-            this.MergedView.Size = new System.Drawing.Size(763, 200);
+            this.MergedView.Size = new System.Drawing.Size(763, 248);
             this.MergedView.TabIndex = 6;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Arial Rounded MT Bold", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(111, 22);
+            this.label1.TabIndex = 7;
+            this.label1.Text = "Query Box:";
             // 
             // carRental
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1066, 290);
+            this.ClientSize = new System.Drawing.Size(787, 336);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.MergedView);
             this.Controls.Add(this.sql_input);
             this.Controls.Add(this.submitBtn);
@@ -84,6 +96,7 @@
         private System.Windows.Forms.Button submitBtn;
         private System.Windows.Forms.TextBox sql_input;
         private System.Windows.Forms.DataGridView MergedView;
+        private System.Windows.Forms.Label label1;
     }
 }
 
