@@ -60,6 +60,7 @@ namespace WindowsFormsApp2
             columnName = columnName.ToLower();
             switch (columnName)
             {
+                //g-cars
                 case "car id":
                 case "vin":
                     return "G-Vin";
@@ -71,23 +72,31 @@ namespace WindowsFormsApp2
                 case "model_year":
                 case "year":
                     return "G-Year";
+                //g-customers
+                case "drivers license":
+                case "driverslicensenumber":
+                    return "G-License";
+                case "full_name":
+                case "name":
+                    return "G-FullName";
+                case "address":
+                    return "G-FullAddress";
+                case "dateofbirth":
+                    return "G-Age";
                 default:
                     return "0";
             }
         }
 
-
         DataTable SqlQueryfetch_Mehdi(string sql)
         {
             sql = TrimGdash(sql);
-            //string newsql = Merge_mehdi(sql);
-            //sql = "select 'car id', type from CAR_INFO";
-
+            
             DataSet ds = new DataSet();
+
             var da = new SQLiteDataAdapter(sql, conn_Mehdi);
             da.Fill(ds);
             sql_input.Text = String.Empty;
-
             return ds.Tables[0];
         }
 
@@ -142,59 +151,75 @@ namespace WindowsFormsApp2
 
         DataTable MergeDB(DataTable Mehdi, DataTable London, string originalQuery)
         {
+            Regex rx_date = new Regex("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})");
             originalQuery = originalQuery.ToLower();
             DataTable masterView = new DataTable();
             DataTable masterView2 = new DataTable();
             if (originalQuery.Contains("g-customers"))
             {
                 DataTable data_Mehdi_New = Mehdi.Clone();
-                data_Mehdi_New.Columns[0].DataType = typeof(Int64);
+                for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
+                {
+                    data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
+                }
                 foreach (DataRow row in Mehdi.Rows)
                 {
                     data_Mehdi_New.ImportRow(row);
                 }
+                for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
+                {
+                    data_Mehdi_New.Columns[i].ColumnName = ConvertToGschemaColumnName(data_Mehdi_New.Columns[i].ColumnName);
+                }
+                data_Mehdi_New.Columns.Add("G-Age", typeof(Int32));
+                foreach (DataRow dr in data_Mehdi_New.Rows)
+                {
+                    dr["G-Age"] = 0;
+                }
                 data_Mehdi_New.AcceptChanges();
                 Mehdi = data_Mehdi_New;
-
-                Mehdi.Columns["Drivers License"].ColumnName = "DriversLicenseNumber";
-                Mehdi.Columns["Address"].ColumnName = "Address";
-                Mehdi.Columns["Name"].ColumnName = "Full_Name";
-                Mehdi.Columns.Add("DateOfBirth", typeof(string));
 
                 masterView = Mehdi.Clone();
                 foreach (DataRow dr in Mehdi.Rows)
                 {
-                    var DOB = dr.ItemArray[3].ToString();
-                    if (DOB == "")
+                    masterView.ImportRow(dr);
+                }
+
+                for (int i = 0; i < London.Rows.Count; i++)
+                {
+                    var newRow = masterView.NewRow();
+                    var sourceRow = London.Rows[i];
+                    int j = 0;
+                    foreach (object item in sourceRow.ItemArray)
                     {
-                        dr.SetField<string>(3, "1/1/1970");
+                        MatchCollection match = rx_date.Matches(item.ToString());
+                        if (match.Count > 0)
+                        {
+                            DateTime date = new DateTime(Int32.Parse(match[0].Groups[3].ToString()), Int32.Parse(match[0].Groups[1].ToString()), Int32.Parse(match[0].Groups[2].ToString()));
+                            TimeSpan length = DateTime.Now - date;
+                            int age = length.Days / 365;
+                            object[] row = sourceRow.ItemArray;
+                            row[j] = age.ToString();
+                            sourceRow.ItemArray = row;
+                        }
+                        j++;
                     }
-                    masterView.ImportRow(dr);
+                    newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
+                    masterView.Rows.Add(newRow);
                 }
-                foreach (DataRow dr in London.Rows)
+                for (int i = 0; i < masterView.Rows.Count; i++)
                 {
-                    var DOB = dr.ItemArray[3].ToString();
-                    var EndChar = DOB.IndexOf(' ');
-                    DOB = DOB.Substring(0, EndChar);
-                    dr.SetField<string>(3, DOB);
-                    masterView.ImportRow(dr);
-                }
-
-                foreach (DataRow dr in masterView.Rows)
-                {
-                    Int32 currentYear = 2018;
-                    var LincenseNumber = dr.ItemArray[0];
-                    var Address = dr.ItemArray[1];
-                    var FullName = dr.ItemArray[2];
-                    var DOB = dr.ItemArray[3];
-                    Regex rx = new Regex("[0-9]{4}$");
-                    MatchCollection year = rx.Matches(DOB.ToString());
-
                     DataRow newRow = G_Customers.NewRow();
-                    newRow.SetField<string>("G-License", LincenseNumber.ToString());
-                    newRow.SetField<string>("G-Fullname", Address.ToString());
-                    newRow.SetField<string>("G-Fulladdress", FullName.ToString());
-                    newRow.SetField<Int32>("G-Age", currentYear - (Int32.Parse(year[0].ToString())));
+                    for (int j = 0; j < masterView.Columns.Count; j++)
+                    {
+                        if (masterView.Columns[j].ColumnName == "G-License" || masterView.Columns[j].ColumnName == "G-FullName" || masterView.Columns[j].ColumnName == "G-FullAddress")
+                        {
+                            newRow.SetField<string>(masterView.Columns[j].ColumnName, masterView.Rows[i].ItemArray[j].ToString());
+                        }
+                        else if (masterView.Columns[j].ColumnName == "G-Age")
+                        {
+                            newRow.SetField<Int32>(masterView.Columns[j].ColumnName, Int32.Parse(masterView.Rows[i].ItemArray[j].ToString()));
+                        }
+                    }
                     G_Customers.Rows.Add(newRow);
                 }
                 G_Customers.AcceptChanges();
@@ -207,6 +232,7 @@ namespace WindowsFormsApp2
                 for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
                 {
                     data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
+                    //data_Mehdi_New.Columns[i].ColumnName = ConvertToGschemaColumnName(data_Mehdi_New.Columns[i].ColumnName
                 }
                 foreach (DataRow row in Mehdi.Rows)
                 {
