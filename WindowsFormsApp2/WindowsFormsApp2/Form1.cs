@@ -295,7 +295,9 @@ namespace WindowsFormsApp2
                 DateTime initialDate = new DateTime(), lastDate = new DateTime();
                 for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
                 {
-                    data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
+                    //data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
+                    data_Mehdi_New.Columns[i].DataType = typeof(string);
+
                 }
                 foreach (DataRow row in Mehdi.Rows)
                 {
@@ -309,9 +311,35 @@ namespace WindowsFormsApp2
                 Mehdi = data_Mehdi_New;
 
                 masterView = Mehdi.Clone();
-                foreach (DataRow dr in Mehdi.Rows)
+                for (int i = 0; i < Mehdi.Rows.Count; i++)
                 {
-                    masterView.ImportRow(dr);
+                    var newRow = masterView.NewRow();
+                    var sourceRow = Mehdi.Rows[i];
+                    int j = 0;
+                    foreach (object item in sourceRow.ItemArray)
+                    {
+                        MatchCollection startDate = rx_date.Matches(item.ToString());
+                        MatchCollection endDate = rx_date.Matches(item.ToString());
+                        var colName = Mehdi.Columns[j].ColumnName;
+                        if (startDate.Count > 0 && colName.Contains("G-Start"))
+                        {
+                            initialDate = new DateTime(Int32.Parse(startDate[0].Groups[3].ToString()),
+                                Int32.Parse(startDate[0].Groups[1].ToString()), Int32.Parse(startDate[0].Groups[2].ToString()));
+                        }
+                        else if (endDate.Count > 0 && colName.Contains("G-Number") && initialDate != DateTime.MinValue)
+                        {
+                            lastDate = new DateTime(Int32.Parse(startDate[0].Groups[3].ToString()),
+                                Int32.Parse(startDate[0].Groups[1].ToString()), Int32.Parse(startDate[0].Groups[2].ToString()));
+                            TimeSpan days = lastDate - initialDate;
+                            int numberOfDays = days.Days;
+                            object[] row = sourceRow.ItemArray;
+                            row[j] = numberOfDays;
+                            sourceRow.ItemArray = row;
+                        }
+                        j++;
+                    }
+                    newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
+                    masterView.Rows.Add(newRow);
                 }
 
                 for (int i = 0; i < London.Rows.Count; i++)
