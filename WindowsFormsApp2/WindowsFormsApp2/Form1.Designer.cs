@@ -61,7 +61,7 @@
             this.MergedView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.MergedView.Location = new System.Drawing.Point(12, 76);
             this.MergedView.Name = "MergedView";
-            this.MergedView.Size = new System.Drawing.Size(763, 248);
+            this.MergedView.Size = new System.Drawing.Size(935, 248);
             this.MergedView.TabIndex = 6;
             // 
             // label1
@@ -78,7 +78,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(787, 336);
+            this.ClientSize = new System.Drawing.Size(959, 336);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.MergedView);
             this.Controls.Add(this.sql_input);
