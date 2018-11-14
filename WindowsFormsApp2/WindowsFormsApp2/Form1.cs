@@ -83,6 +83,13 @@ namespace WindowsFormsApp2
                     return "G-FullAddress";
                 case "dateofbirth":
                     return "G-Age";
+                //g-rentals
+                case "startrentaldate":
+                case "start date":
+                    return "G-StartDate";
+                case "endrentaldate":
+                case "end date":
+                    return "G-NumberOfDays";
                 default:
                     return "0";
             }
@@ -154,7 +161,6 @@ namespace WindowsFormsApp2
             Regex rx_date = new Regex("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})");
             originalQuery = originalQuery.ToLower();
             DataTable masterView = new DataTable();
-            DataTable masterView2 = new DataTable();
             if (originalQuery.Contains("g-customers"))
             {
                 DataTable data_Mehdi_New = Mehdi.Clone();
@@ -232,7 +238,6 @@ namespace WindowsFormsApp2
                 for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
                 {
                     data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
-                    //data_Mehdi_New.Columns[i].ColumnName = ConvertToGschemaColumnName(data_Mehdi_New.Columns[i].ColumnName
                 }
                 foreach (DataRow row in Mehdi.Rows)
                 {
@@ -286,63 +291,132 @@ namespace WindowsFormsApp2
 
             else if (originalQuery.Contains("g-rentals"))
             {
-                DataTable data_London_New = London.Clone();
-                data_London_New.Columns[1].DataType = typeof(string);
-                data_London_New.Columns[2].DataType = typeof(string);
-                data_London_New.Columns[3].DataType = typeof(string);
-                foreach (DataRow row in London.Rows)
+                DataTable data_Mehdi_New = Mehdi.Clone();
+                DateTime initialDate = new DateTime(), lastDate = new DateTime();
+                for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
                 {
-                    data_London_New.ImportRow(row);
+                    data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
                 }
-                data_London_New.AcceptChanges();
-                London = data_London_New;
-
-                Mehdi.Columns["car id"].ColumnName = "Vin";
-                Mehdi.Columns["Drivers License"].ColumnName = "DriverseLicenseNumber";
-                Mehdi.Columns["Start Date"].ColumnName = "StartRentalDate";
-                Mehdi.Columns["End Date"].ColumnName = "EndRentalDate";
+                foreach (DataRow row in Mehdi.Rows)
+                {
+                    data_Mehdi_New.ImportRow(row);
+                }
+                for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
+                {
+                    data_Mehdi_New.Columns[i].ColumnName = ConvertToGschemaColumnName(data_Mehdi_New.Columns[i].ColumnName);
+                }
+                data_Mehdi_New.AcceptChanges();
+                Mehdi = data_Mehdi_New;
 
                 masterView = Mehdi.Clone();
-
                 foreach (DataRow dr in Mehdi.Rows)
                 {
                     masterView.ImportRow(dr);
                 }
 
-                foreach (DataRow dr in London.Rows)
+                for (int i = 0; i < London.Rows.Count; i++)
                 {
-                    var startDate = dr.ItemArray[2].ToString();
-                    var s_EndChar = startDate.IndexOf(' ');
-                    startDate = startDate.Substring(0, s_EndChar);
-                    dr.SetField<string>(2, startDate);
-
-                    var endDate = dr.ItemArray[3].ToString();
-                    var e_EndChar = endDate.IndexOf(' ');
-                    endDate = endDate.Substring(0, e_EndChar);
-                    dr.SetField<string>(3, endDate);
-                    masterView.ImportRow(dr);
+                    var newRow = masterView.NewRow();
+                    var sourceRow = London.Rows[i];
+                    int j = 0;
+                    foreach (object item in sourceRow.ItemArray)
+                    {
+                        MatchCollection startDate = rx_date.Matches(item.ToString());
+                        MatchCollection endDate = rx_date.Matches(item.ToString());
+                        var colName = London.Columns[j].ColumnName;
+                        if (startDate.Count > 0 && colName == "StartRentalDate")
+                        {
+                            initialDate = new DateTime(Int32.Parse(startDate[0].Groups[3].ToString()), 
+                                Int32.Parse(startDate[0].Groups[1].ToString()), Int32.Parse(startDate[0].Groups[2].ToString()));
+                        }
+                        else if (endDate.Count > 0 && colName == "EndRentalDate" && initialDate != DateTime.MinValue)
+                        {
+                            lastDate = new DateTime(Int32.Parse(startDate[0].Groups[3].ToString()),
+                                Int32.Parse(startDate[0].Groups[1].ToString()), Int32.Parse(startDate[0].Groups[2].ToString()));
+                            TimeSpan days = lastDate - initialDate;
+                            int numberOfDays = days.Days;
+                            object[] row = sourceRow.ItemArray;
+                            row[j] = numberOfDays;
+                            sourceRow.ItemArray = row;
+                        }
+                        j++;
+                    }
+                    newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
+                    masterView.Rows.Add(newRow);
                 }
-
-                foreach (DataRow dr in masterView.Rows)
+                for (int i = 0; i < masterView.Rows.Count; i++)
                 {
-                    var vin = dr.ItemArray[0];
-                    var License = dr.ItemArray[1];
-                    var StartDate = dr.ItemArray[2];
-                    var EndDate = dr.ItemArray[3];
-                    Regex rx = new Regex("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4}$)");
-                    MatchCollection StartDate_Regex = rx.Matches(StartDate.ToString());
-                    MatchCollection EndDate_Regex = rx.Matches(EndDate.ToString());
-                    DateTime StartDate_Real = new DateTime(Int32.Parse(StartDate_Regex[0].Groups[3].ToString()), Int32.Parse(StartDate_Regex[0].Groups[1].ToString()), Int32.Parse(StartDate_Regex[0].Groups[2].ToString()));
-                    DateTime EndDate_Real = new DateTime(Int32.Parse(EndDate_Regex[0].Groups[3].ToString()), Int32.Parse(EndDate_Regex[0].Groups[1].ToString()), Int32.Parse(EndDate_Regex[0].Groups[2].ToString()));
-                    System.TimeSpan numberDays = EndDate_Real.Subtract(StartDate_Real);
-
                     DataRow newRow = G_Rentals.NewRow();
-                    newRow.SetField<string>("G-Vin", vin.ToString());
-                    newRow.SetField<string>("G-License", License.ToString());
-                    newRow.SetField<string>("G-StartDate", StartDate.ToString());
-                    newRow.SetField<Int32>("G-NumberOfDays", Int32.Parse((numberDays.TotalDays).ToString()));
+                    for (int j = 0; j < masterView.Columns.Count; j++)
+                    {
+                        if (masterView.Columns[j].ColumnName == "G-License" || masterView.Columns[j].ColumnName == "G-Vin" || masterView.Columns[j].ColumnName == "G-StartDate")
+                        {
+                            newRow.SetField<string>(masterView.Columns[j].ColumnName, masterView.Rows[i].ItemArray[j].ToString());
+                        }
+                        else if (masterView.Columns[j].ColumnName == "G-NumberOfDays")
+                        {
+                            newRow.SetField<Int32>(masterView.Columns[j].ColumnName, Int32.Parse(masterView.Rows[i].ItemArray[j].ToString()));
+                        }
+                    }
                     G_Rentals.Rows.Add(newRow);
                 }
+                //DataTable data_London_New = London.Clone();
+                //data_London_New.Columns[1].DataType = typeof(string);
+                //data_London_New.Columns[2].DataType = typeof(string);
+                //data_London_New.Columns[3].DataType = typeof(string);
+                //foreach (DataRow row in London.Rows)
+                //{
+                //    data_London_New.ImportRow(row);
+                //}
+                //data_London_New.AcceptChanges();
+                //London = data_London_New;
+
+                //Mehdi.Columns["car id"].ColumnName = "Vin";
+                //Mehdi.Columns["Drivers License"].ColumnName = "DriverseLicenseNumber";
+                //Mehdi.Columns["Start Date"].ColumnName = "StartRentalDate";
+                //Mehdi.Columns["End Date"].ColumnName = "EndRentalDate";
+
+                //masterView = Mehdi.Clone();
+
+                //foreach (DataRow dr in Mehdi.Rows)
+                //{
+                //    masterView.ImportRow(dr);
+                //}
+
+                //foreach (DataRow dr in London.Rows)
+                //{
+                //    var startDate = dr.ItemArray[2].ToString();
+                //    var s_EndChar = startDate.IndexOf(' ');
+                //    startDate = startDate.Substring(0, s_EndChar);
+                //    dr.SetField<string>(2, startDate);
+
+                //    var endDate = dr.ItemArray[3].ToString();
+                //    var e_EndChar = endDate.IndexOf(' ');
+                //    endDate = endDate.Substring(0, e_EndChar);
+                //    dr.SetField<string>(3, endDate);
+                //    masterView.ImportRow(dr);
+                //}
+
+                //foreach (DataRow dr in masterView.Rows)
+                //{
+                //    var vin = dr.ItemArray[0];
+                //    var License = dr.ItemArray[1];
+                //    var StartDate = dr.ItemArray[2];
+                //    var EndDate = dr.ItemArray[3];
+                //    Regex rx = new Regex("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4}$)");
+                //    MatchCollection StartDate_Regex = rx.Matches(StartDate.ToString());
+                //    MatchCollection EndDate_Regex = rx.Matches(EndDate.ToString());
+                //    DateTime StartDate_Real = new DateTime(Int32.Parse(StartDate_Regex[0].Groups[3].ToString()), Int32.Parse(StartDate_Regex[0].Groups[1].ToString()), Int32.Parse(StartDate_Regex[0].Groups[2].ToString()));
+                //    DateTime EndDate_Real = new DateTime(Int32.Parse(EndDate_Regex[0].Groups[3].ToString()), Int32.Parse(EndDate_Regex[0].Groups[1].ToString()), Int32.Parse(EndDate_Regex[0].Groups[2].ToString()));
+                //    System.TimeSpan numberDays = EndDate_Real.Subtract(StartDate_Real);
+
+                //    DataRow newRow = G_Rentals.NewRow();
+                //    newRow.SetField<string>("G-Vin", vin.ToString());
+                //    newRow.SetField<string>("G-License", License.ToString());
+                //    newRow.SetField<string>("G-StartDate", StartDate.ToString());
+                //    newRow.SetField<Int32>("G-NumberOfDays", Int32.Parse((numberDays.TotalDays).ToString()));
+                //    G_Rentals.Rows.Add(newRow);
+                //}
                 G_Rentals.AcceptChanges();
                 return G_Rentals;
             }
