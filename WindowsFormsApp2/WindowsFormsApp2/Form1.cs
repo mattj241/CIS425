@@ -45,8 +45,8 @@ namespace WindowsFormsApp2
 
             G_Customers = new DataTable();
             G_Customers.Columns.Add("G-License", typeof(string));
-            G_Customers.Columns.Add("G-FullName", typeof(string));
             G_Customers.Columns.Add("G-FullAddress", typeof(string));
+            G_Customers.Columns.Add("G-FullName", typeof(string));
             G_Customers.Columns.Add("G-Age", typeof(Int32));
 
             G_Rentals = new DataTable();
@@ -92,8 +92,14 @@ namespace WindowsFormsApp2
                 case "endrentaldate":
                 case "end date":
                     return "G-NumberOfDays";
+                //joins
+                case "car id1":
+                    return "G-Vin_";
+                case "drivers license1":
+                    return "G-License_";
                 default:
-                    return "0";
+                    return "null";
+
             }
         }
 
@@ -174,7 +180,6 @@ namespace WindowsFormsApp2
             {
                 attrib = attrib.Replace("fulladdress", "address");
             }
-            //TODO: Add a DOB column to Has' table
             if (attrib.Contains("age"))
             {
                 attrib = attrib.Replace("age", "dateofbirth");
@@ -208,7 +213,7 @@ namespace WindowsFormsApp2
             return attrib;
         }
 
-        string convertToMehdiTableNames(string sql)
+        string ConvertToMehdiTableNames(string sql)
         {
             sql = sql.ToLower();
 
@@ -240,13 +245,23 @@ namespace WindowsFormsApp2
         DataTable SqlQueryfetch_Mehdi(string sql)
         {
             sql = TrimGdash(sql);
-            
-            DataSet ds = new DataSet();
 
-            var da = new SQLiteDataAdapter(sql, conn_Mehdi);
-            da.Fill(ds);
-            sql_input.Text = String.Empty;
-            return ds.Tables[0];
+            DataSet ds = new DataSet();
+            DataTable error = new DataTable();
+            try
+            { 
+                var da = new SQLiteDataAdapter(sql, conn_Mehdi);
+                da.Fill(ds);
+                sql_input.Text = String.Empty;
+                return ds.Tables[0];
+            }
+            catch (System.Data.SQLite.SQLiteException)
+            {
+                MessageBox.Show("Invalid query for Has's Database", "Impossible Query",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                error.TableName = "error";
+                return error;
+            }
         }
 
         DataTable SqlQueryfetch_London(string sql)
@@ -256,15 +271,25 @@ namespace WindowsFormsApp2
             cmd = new SqlCommand();
             dataTable = new DataTable();
 
-            cmd.CommandText = sql;
-            cmd.CommandType = CommandType.Text;
-            cmd.Connection = conn_London;
+            try
+            {
+                cmd.CommandText = sql;
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn_London;
 
-            conn_London.Open();
-            reader = cmd.ExecuteReader();
-            dataTable.Load(reader);
+                conn_London.Open();
+                reader = cmd.ExecuteReader();
+                dataTable.Load(reader);
 
-            conn_London.Close();
+                conn_London.Close();
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show("Invalid query for Matt's Database", "Impossible Query",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                conn_London.Close();
+            }
+
             return dataTable;
         }
 
@@ -274,14 +299,16 @@ namespace WindowsFormsApp2
             originalQuery = originalQuery.ToLower();
             DataTable masterView = new DataTable();
             DataTable G_FinalTable= new DataTable();
+            DataTable Mehdi_original = Mehdi;
+            DataTable London_original = London;
             if (originalQuery.Contains("g-customers"))
             {
-                DataTable data_Mehdi_New = Mehdi.Clone();
+                DataTable data_Mehdi_New = Mehdi_original.Clone();
                 for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
                 {
-                    data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
+                    data_Mehdi_New.Columns[i].DataType = London_original.Columns[i].DataType;
                 }
-                foreach (DataRow row in Mehdi.Rows)
+                foreach (DataRow row in Mehdi_original.Rows)
                 {
                     data_Mehdi_New.ImportRow(row);
                 }
@@ -289,24 +316,16 @@ namespace WindowsFormsApp2
                 {
                     data_Mehdi_New.Columns[i].ColumnName = ConvertToGschemaColumnName(data_Mehdi_New.Columns[i].ColumnName);
                 }
-                data_Mehdi_New.Columns.Add("G-Age", typeof(Int32));
-                foreach (DataRow dr in data_Mehdi_New.Rows)
-                {
-                    dr["G-Age"] = 0;
-                }
                 data_Mehdi_New.AcceptChanges();
                 Mehdi = data_Mehdi_New;
 
                 masterView = Mehdi.Clone();
+                int index = 0;
                 foreach (DataRow dr in Mehdi.Rows)
                 {
-                    masterView.ImportRow(dr);
-                }
-
-                for (int i = 0; i < London.Rows.Count; i++)
-                {
+                    //masterView.ImportRow(dr);
                     var newRow = masterView.NewRow();
-                    var sourceRow = London.Rows[i];
+                    var sourceRow = Mehdi.Rows[index];
                     int j = 0;
                     foreach (object item in sourceRow.ItemArray)
                     {
@@ -323,6 +342,38 @@ namespace WindowsFormsApp2
                         j++;
                     }
                     newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
+                    masterView.Rows.Add(newRow);
+                    index++;
+                }
+
+                for (int i = 0; i < London_original.Rows.Count; i++)
+                {
+                    var newRow = masterView.NewRow();
+                    var sourceRow = London_original.Rows[i];
+                    int j = 0;
+                    foreach (object item in sourceRow.ItemArray)
+                    {
+                        MatchCollection match = rx_date.Matches(item.ToString());
+                        if (match.Count > 0)
+                        {
+                            DateTime date = new DateTime(Int32.Parse(match[0].Groups[3].ToString()), Int32.Parse(match[0].Groups[1].ToString()), Int32.Parse(match[0].Groups[2].ToString()));
+                            TimeSpan length = DateTime.Now - date;
+                            int age = length.Days / 365;
+                            object[] row = sourceRow.ItemArray;
+                            row[j] = age.ToString();
+                            sourceRow.ItemArray = row;
+                        }
+                        j++;
+                    }
+                    newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
+                    if (originalQuery.Contains("*"))
+                    {
+                        object[] swapUnorderedColumns = newRow.ItemArray;
+                        var temp = swapUnorderedColumns[1];
+                        swapUnorderedColumns[1] = swapUnorderedColumns[2];
+                        swapUnorderedColumns[2] = temp;
+                        newRow.ItemArray = swapUnorderedColumns;
+                    }
                     masterView.Rows.Add(newRow);
                 }
                 foreach(DataColumn dc in G_Customers.Columns)
@@ -356,14 +407,14 @@ namespace WindowsFormsApp2
                 G_FinalTable.AcceptChanges();
             }
 
-            else if (originalQuery.Contains("g-cars"))
+            if (originalQuery.Contains("g-cars"))
             {
-                DataTable data_Mehdi_New = Mehdi.Clone();
+                DataTable data_Mehdi_New = Mehdi_original.Clone();
                 for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
                 {
-                    data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
+                    data_Mehdi_New.Columns[i].DataType = London_original.Columns[i].DataType;
                 }
-                foreach (DataRow row in Mehdi.Rows)
+                foreach (DataRow row in Mehdi_original.Rows)
                 {
                     data_Mehdi_New.ImportRow(row);
                 }
@@ -381,14 +432,14 @@ namespace WindowsFormsApp2
                     masterView.ImportRow(dr);
                 }
 
-                for (int i = 0; i < London.Rows.Count; i++)
+                for (int i = 0; i < London_original.Rows.Count; i++)
                 {
                     var newRow = masterView.NewRow();
-                    var sourceRow = London.Rows[i];
+                    var sourceRow = London_original.Rows[i];
                     newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
                     masterView.Rows.Add(newRow);
                 }
-                foreach (DataColumn dc in G_cars.Columns)
+                foreach (DataColumn dc in masterView.Columns)
                 {
                     try
                     {
@@ -422,17 +473,15 @@ namespace WindowsFormsApp2
                 G_FinalTable.AcceptChanges();
             }
 
-            else if (originalQuery.Contains("g-rentals"))
+            if (originalQuery.Contains("g-rentals"))
             {
-                DataTable data_Mehdi_New = Mehdi.Clone();
+                DataTable data_Mehdi_New = Mehdi_original.Clone();
                 DateTime initialDate = new DateTime(), lastDate = new DateTime();
                 for (int i = 0; i < data_Mehdi_New.Columns.Count; i++)
                 {
-                    //data_Mehdi_New.Columns[i].DataType = London.Columns[i].DataType;
                     data_Mehdi_New.Columns[i].DataType = typeof(string);
-
                 }
-                foreach (DataRow row in Mehdi.Rows)
+                foreach (DataRow row in Mehdi_original.Rows)
                 {
                     data_Mehdi_New.ImportRow(row);
                 }
@@ -475,20 +524,23 @@ namespace WindowsFormsApp2
                     masterView.Rows.Add(newRow);
                 }
 
-                for (int i = 0; i < London.Rows.Count; i++)
+                for (int i = 0; i < London_original.Rows.Count; i++)
                 {
                     var newRow = masterView.NewRow();
-                    var sourceRow = London.Rows[i];
+                    var sourceRow = London_original.Rows[i];
                     int j = 0;
                     foreach (object item in sourceRow.ItemArray)
                     {
                         MatchCollection startDate = rx_date.Matches(item.ToString());
                         MatchCollection endDate = rx_date.Matches(item.ToString());
-                        var colName = London.Columns[j].ColumnName;
+                        var colName = London_original.Columns[j].ColumnName;
                         if (startDate.Count > 0 && colName == "StartRentalDate")
                         {
                             initialDate = new DateTime(Int32.Parse(startDate[0].Groups[3].ToString()),
                                 Int32.Parse(startDate[0].Groups[1].ToString()), Int32.Parse(startDate[0].Groups[2].ToString()));
+                            object[] row = sourceRow.ItemArray;
+                            row[j] = initialDate.Date.ToShortDateString();
+                            sourceRow.ItemArray = row;
                         }
                         else if (endDate.Count > 0 && colName == "EndRentalDate" && initialDate != DateTime.MinValue)
                         {
@@ -505,7 +557,7 @@ namespace WindowsFormsApp2
                     newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
                     masterView.Rows.Add(newRow);
                 }
-                foreach (DataColumn dc in G_Rentals.Columns)
+                foreach (DataColumn dc in masterView.Columns)
                 {
                     try
                     {
@@ -513,7 +565,7 @@ namespace WindowsFormsApp2
                     }
                     catch
                     {
-                        G_FinalTable.Columns.Add($"{dc.ColumnName}_", dc.DataType);
+                        //do nothing
                     }
                 }
                 for (int i = 0; i < masterView.Rows.Count; i++)
@@ -521,7 +573,9 @@ namespace WindowsFormsApp2
                     DataRow newRow = G_FinalTable.NewRow();
                     for (int j = 0; j < masterView.Columns.Count; j++)
                     {
-                        if (masterView.Columns[j].ColumnName == "G-License" || masterView.Columns[j].ColumnName == "G-Vin" || masterView.Columns[j].ColumnName == "G-StartDate")
+                        if (masterView.Columns[j].ColumnName == "G-License" || masterView.Columns[j].ColumnName == "G-Vin" 
+                            || masterView.Columns[j].ColumnName == "G-StartDate" || masterView.Columns[j].ColumnName == "G-Vin_" 
+                            || masterView.Columns[j].ColumnName == "G-License_")
                         {
                             newRow.SetField<string>(masterView.Columns[j].ColumnName, masterView.Rows[i].ItemArray[j].ToString());
                         }
@@ -583,7 +637,7 @@ namespace WindowsFormsApp2
             }
             if (indicator == 'M')
             {
-                replacementSqlInput = convertToMehdiTableNames(replacementSqlInput);
+                replacementSqlInput = ConvertToMehdiTableNames(replacementSqlInput);
             }
             return replacementSqlInput.Trim();
         }
@@ -595,20 +649,17 @@ namespace WindowsFormsApp2
             string Mehdiquery = BuildQuery(query, 'M');
 
             DataTable newTable = new DataTable();
-            try
+
+            DataTable data_London = SqlQueryfetch_London(Londonquery);
+            DataTable data_Mehdi = SqlQueryfetch_Mehdi(Mehdiquery);
+            if (data_Mehdi.TableName != "error")
             {
-                DataTable data_London = SqlQueryfetch_London(Londonquery);
-                DataTable data_Mehdi = SqlQueryfetch_Mehdi(Mehdiquery);
+
                 data_London = ConvertDateToString(data_London);
                 newTable = MergeDB(data_Mehdi, data_London, query);
 
                 MergedView.DataSource = newTable;
                 MergedView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Please re-enter query", "Impossible Query",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
