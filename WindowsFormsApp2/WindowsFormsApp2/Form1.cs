@@ -142,7 +142,7 @@ namespace WindowsFormsApp2
             {
                 attrib = attrib.Replace("make", "");
             }
-            if (attrib.Contains("color"))
+            if (attrib.Contains("color") )
             {
                 attrib = attrib.Replace("color", "");
             }
@@ -301,6 +301,12 @@ namespace WindowsFormsApp2
             DataTable G_FinalTable= new DataTable();
             DataTable Mehdi_original = Mehdi;
             DataTable London_original = London;
+            DataTable tempTable;
+            bool joinQuery = false;
+            if (originalQuery.Contains("."))
+            {
+                joinQuery = true;
+            }
             if (originalQuery.Contains("g-customers"))
             {
                 DataTable data_Mehdi_New = Mehdi_original.Clone();
@@ -439,16 +445,17 @@ namespace WindowsFormsApp2
                     newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
                     masterView.Rows.Add(newRow);
                 }
-                foreach (DataColumn dc in masterView.Columns)
+                if (joinQuery)
                 {
-                    try
-                    {
-                        G_FinalTable.Columns.Add(dc.ColumnName, dc.DataType);
-                    }
-                    catch
-                    {
-                        G_FinalTable.Columns.Add($"{dc.ColumnName}_", dc.DataType);
-                    }
+                    tempTable = masterView;
+                }
+                else
+                {
+                    tempTable = G_cars;
+                }
+                foreach (DataColumn dc in tempTable.Columns)
+                {
+                    G_FinalTable.Columns.Add(dc.ColumnName, dc.DataType);
                 }
                 for (int i = 0; i < masterView.Rows.Count; i++)
                 {
@@ -557,16 +564,21 @@ namespace WindowsFormsApp2
                     newRow.ItemArray = sourceRow.ItemArray.Clone() as object[];
                     masterView.Rows.Add(newRow);
                 }
-                foreach (DataColumn dc in masterView.Columns)
+                if (joinQuery)
+                {
+                    tempTable = masterView;
+                }
+                else
+                {
+                    tempTable = G_Rentals;
+                }
+                foreach (DataColumn dc in tempTable.Columns)
                 {
                     try
                     {
                         G_FinalTable.Columns.Add(dc.ColumnName, dc.DataType);
                     }
-                    catch
-                    {
-                        //do nothing
-                    }
+                    catch { }
                 }
                 for (int i = 0; i < masterView.Rows.Count; i++)
                 {
@@ -639,6 +651,11 @@ namespace WindowsFormsApp2
             {
                 replacementSqlInput = ConvertToMehdiTableNames(replacementSqlInput);
             }
+            replacementSqlInput = replacementSqlInput.Replace("select ,", "select")
+                .Replace(", from", "from")
+                .Replace(",  from", " from")
+                .Replace("select  from", "select null from")
+                .Replace("select from", "select null from");
             return replacementSqlInput.Trim();
         }
 
@@ -647,6 +664,8 @@ namespace WindowsFormsApp2
             string query = sql_input.Text.ToLower();
             string Londonquery = BuildQuery(query, 'L');
             string Mehdiquery = BuildQuery(query, 'M');
+            string test = "test";
+            test = test.Replace("best", "");
 
             DataTable newTable = new DataTable();
 
